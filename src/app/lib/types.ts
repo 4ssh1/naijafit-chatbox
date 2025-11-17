@@ -12,3 +12,10 @@ export type Message = {
   content: string;          
   timestamp: number;       
 }
+
+export type Gender = 'male' | 'female';
+
+export interface ResponseResult {
+  text: string;
+  gender?: Gender;
+}
