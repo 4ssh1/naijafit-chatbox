@@ -1,8 +1,11 @@
+import Header from "./components/Header";
+import Loading from "./loading";
 
 export default function Home() {
   return (
-   <>
-   nsnn
-   </>
+  <>
+   <Header />
+   <Loading />
+  </>
   );
 }
