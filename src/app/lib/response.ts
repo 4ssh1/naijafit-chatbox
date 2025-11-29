@@ -1,11 +1,5 @@
 import { Gender, ResponseResult, WorkOut, Food, MealPlan, FormGuide } from "./types";
 import { defaultResponses } from "./consts";
-import workouts from "../data/workout.json";
-import foods from "../data/foods.json";
-
-// import mealPlans from "../data/meal-plans.json";
-// import formGuides from "../data/form-guides.json";
-
 
 export function getContextualResponse(
   msg: string,

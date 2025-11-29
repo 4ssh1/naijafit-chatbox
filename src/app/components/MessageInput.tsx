@@ -10,7 +10,7 @@ function MessageInput({input, handleChange, handleSend, isLoading, handleKeyPres
             onChange={handleChange}
             onKeyUp ={handleKeyPress}
             placeholder="Ask about workouts, meals, form, alternatives..."
-            className="flex-1 border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="flex-1 border border-gray-300 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-black"
           />
           <button
             onClick={handleSend}
