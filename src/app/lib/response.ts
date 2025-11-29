@@ -1,63 +1,172 @@
-import { Gender, ResponseResult } from "./types";
+import { Gender, ResponseResult, WorkOut, Food, MealPlan, FormGuide } from "./types";
 import { defaultResponses } from "./consts";
+import workouts from "../data/workout.json";
+import foods from "../data/foods.json";
 
-export const getContextualResponse = (msg: string, gender?: Gender): ResponseResult => {
-  const lower = msg.toLowerCase();
+// import mealPlans from "../data/meal-plans.json";
+// import formGuides from "../data/form-guides.json";
 
-  if (!gender && (lower.includes('male') || lower.includes('female') || lower.includes('man') || lower.includes('woman'))) {
-    if (lower.includes('female') || lower.includes('woman') || lower.includes('lady')) {
-      return {
-        text: "Welcome! Let's get started with your fitness journey. Are you a beginner, intermediate, or have you already been working out?",
-        gender: 'female',
-      };
-    } else {
-      return {
-        text: "Hello! Ready to transform your body? Are you a beginner, intermediate, or experienced in gym workouts?",
-        gender: 'male',
-      };
-    }
-  }
 
-  // Workout responses
-  if (lower.includes('workout') || lower.includes('exercise') || lower.includes('routine')) {
-    if (gender === 'female') {
-      return {
-        text: "Here’s a suggested workout plan:\n\n**Lower Body (3x/week):** Squats, Lunges, Glute Bridges, Leg Press\n**Upper Body (2x/week):** Push-ups, Dumbbell Rows, Shoulder Press\n**Cardio:** 20-30 minutes of dancing, skipping, or brisk walking\n\nConsistency is key. Which area would you like to focus on?",
-      };
-    } else {
-      return {
-        text: "Here’s a suggested workout plan:\n\n**Push Day:** Bench Press/Push-ups, Overhead Press, Dips/Tricep Extensions\n**Pull Day:** Pull-ups/Lat Pulldowns, Rows, Bicep Curls\n**Leg Day:** Squats, Romanian Deadlifts, Calf Raises\n\nTrain 4-5 days per week and rest adequately. Which day would you like to start?",
-      };
-    }
-  }
+export function getContextualResponse(
+  msg: string,
+  gender?: Gender,
+  workouts?: WorkOut[],
+  foods?: Food[],
+  mealPlans?: MealPlan[],
+  formGuides?: FormGuide[]
+): ResponseResult {
 
-  // Nutrition responses
-  if (lower.includes('food') || lower.includes('eat') || lower.includes('meal') || lower.includes('diet')) {
-    if (gender === 'female') {
-      return {
-        text: "**Sample Meal Plan:**\n\nBreakfast: Boiled yam + eggs, Oatmeal + banana, or Pap with Moi-Moi\nLunch: Brown rice or Ofada rice + grilled protein + vegetables\nDinner: Pepper soup or Vegetable soup + light portion of starch\nSnacks: Fruits, nuts, coconut\n\nReduce refined carbs and sugary drinks. Need alternatives?",
-      };
-    } else {
-      return {
-        text: "**Sample Meal Plan:**\n\nBreakfast: Yam porridge + eggs + fish, Oats + milk + banana, Beans + plantain + egg\nLunch: White rice/Jollof + chicken + veggies, Eba + Egusi soup, Tuwo + assorted soup\nDinner: Brown rice + grilled protein, Yam + fish pepper soup, Beans + plantain + beef\nSnacks: Nuts, eggs, fruits, smoothies\n\nFocus on protein (1.6–2.2g per kg body weight). Are you trying to bulk or cut?",
-      };
-    }
-  }
-
-  // Weight/form guidance
-  if (lower.includes('weight') || lower.includes('stance') || lower.includes('form') || lower.includes('position')) {
+  const text = msg.toLowerCase();
+  if (!gender && (text.includes("male") || text.includes("man") || text.includes("guy"))) {
     return {
-      text: "Good form is essential. \n\n**Key Points:**\n- Squats: Feet shoulder-width, knees track over toes, chest up, back straight.\n- Deadlifts: Bar close to shins, back flat, drive through heels.\n- Bench Press: Shoulder blades squeezed, slight arch in lower back, bar touches mid-chest.\n- Overhead Press: Core tight, press straight up.\n\n**Weight selection:** 8–12 reps with the last 2 challenging. Start light and progress gradually.\nWhich specific exercise would you like guidance on?",
+      text: "Tell me — what's your fitness goal? Weight loss, muscle gain, or general fitness?",
+      gender: "male",
     };
   }
 
-  // Alternative foods
-  if (lower.includes('alternative') || lower.includes('replace') || lower.includes('instead')) {
+  if (!gender && (text.includes("female") || text.includes("woman") || text.includes("lady"))) {
     return {
-      text: "Here are some alternatives:\n\n**Carbs:** White rice → Brown rice, unripe plantain, sweet potato\n**Protein:** Beef → Chicken, Turkey, Fish, Eggs, Beans\n**Veggies:** Lettuce → Spinach, Kale, Ugu\n**Snacks:** Chips → Nuts, Coconut, Fruits\n\nWhich item would you like to replace specifically?",
+      text: "Nice! As a female, we can tailor workouts to your goals. What's your primary goal? Weight loss, toning, or strength?",
+      gender: "female",
     };
   }
 
+  if (formGuides && (
+    text.includes("form") ||
+    text.includes("how to do") ||
+    text.includes("proper") ||
+    text.includes("stance") ||
+    text.includes("position") ||
+    text.includes("technique")
+  )) {
+
+    const found = formGuides.find(f => text.includes(f.exerciseName.toLowerCase()));
+
+    if (found) {
+      return {
+        text:
+          `**${found.exerciseName} — Proper Form Guide**\n\n` +
+          `**Stance:** ${found.stanceDescription}\n\n` +
+          `**Movement Pattern:** ${found.movementPattern}\n\n` +
+          `**Breathing:** ${found.breathingTechnique}\n\n` +
+          `**Safety Tips:**\n- ${found.safetyTips.join("\n- ")}\n\n` +
+          `**Common Injuries to Avoid:**\n- ${found.commonInjuriesToAvoid.join("\n- ")}\n\n` +
+          (found.naijaContext ? `**Tips:** ${found.naijaContext}\n\n` : "") +
+          (found.videoUrl ? `**Video:** ${found.videoUrl}` : "")
+      };
+    }
+
+    return { text: "Tell me the name of the exercise so I can guide your form properly." };
+  }
+
+  if (workouts && (
+    text.includes("workout") ||
+    text.includes("exercise") ||
+    text.includes("routine") ||
+    text.includes("plan")
+  )) {
+
+    const difficulty =
+      text.includes("beginner") ? "beginner" :
+      text.includes("intermediate") ? "intermediate" :
+      text.includes("advanced") ? "advanced" :
+      null;
+
+    const muscles: WorkOut["targetMuscles"][] = [
+      "chest","back","shoulders","biceps","triceps","forearms",
+      "abs","obliques","lower_back","quads","hamstrings","glutes",
+      "calves","core","full_body"
+    ];
+
+    const targetMuscle = muscles.find(m => text.includes(m.replace("_"," ")));
+
+    let matched = workouts.filter(w => w.targetGender === gender || w.targetGender === "both");
+
+    if (difficulty) {
+      matched = matched.filter(w => w.difficultyLevel === difficulty);
+    }
+
+    if (targetMuscle) {
+      matched = matched.filter(w => w.targetMuscles === targetMuscle);
+    }
+
+    if (matched.length > 0) {
+      const first = matched[0];
+      return {
+        text:
+          `Here's a workout you can try:\n\n**${first.name}**\n` +
+          `**Muscles:** ${first.targetMuscles}\n` +
+          `**Difficulty:** ${first.difficultyLevel}\n` +
+          `**Equipment:** ${first.equipmentNeeded}\n\n` +
+          `**Description:** ${first.description}\n\n` +
+          `**Proper Form:** ${first.properForm}\n` +
+          `**Common Mistakes:**\n- ${first.commonMistakes.join("\n- ")}\n\n` +
+          (first.naijaContext ? `**Tips:** ${first.naijaContext}\n\n` : "") +
+          (first.videoUrl ? `**Video:** ${first.videoUrl}` : "")
+      };
+    }
+
+    return {
+      text: "I can create a workout for you — do you want fat loss, strength, or full-body training?"
+    };
+  }
+
+  if (foods && (
+    text.includes("alternative") ||
+    text.includes("replace") ||
+    text.includes("instead of")
+  )) {
+
+    const foundFood = foods.find(f => text.includes(f.name.toLowerCase()));
+
+    if (foundFood) {
+      const healthier = foundFood.healthierAlternatives
+        .map(id => foods.find(f => f.id === id)?.name)
+        .filter(Boolean);
+
+      return {
+        text:
+          `Here are healthier alternatives to **${foundFood.name}**:\n\n- ` +
+          healthier.join("\n- ") +
+          (foundFood.naijaContext ? `\n\n**Naija Tip:** ${foundFood.naijaContext}` : "")
+      };
+    }
+
+    return { text: "Which food would you like to replace? Eg: bread, rice, semo, etc." };
+  }
+
+  if (mealPlans && (
+    text.includes("meal") ||
+    text.includes("diet") ||
+    text.includes("food plan")
+  )) {
+
+    const isWeightLoss = text.includes("weight loss") || text.includes("lose weight");
+    const isMuscleGain = text.includes("muscle") || text.includes("bulk");
+
+    let result: MealPlan | undefined;
+
+    if (gender) {
+      if (isWeightLoss) result = mealPlans.find(p => p.goal === "weight_loss" && (p.targetGender === gender || p.targetGender === "both"));
+      if (isMuscleGain) result = mealPlans.find(p => p.goal === "muscle_gain" && (p.targetGender === gender || p.targetGender === "both"));
+    }
+
+    if (result) {
+      const mealsText = result.meals.map(m =>
+        `**${m.mealType}:** ${m.foods.map(f => `${f.foodName} (${f.portion})`).join(", ")} — ${m.totalCalories} kcal`
+      ).join("\n\n");
+
+      return {
+        text:
+          `**${result.name} Meal Plan**\n\n` +
+          mealsText +
+          `\n\n**Daily Calories:** ${result.dailyCalories}\n\n` +
+          (result.naijaContext ? `**Naija Tip:** ${result.naijaContext}` : "")
+      };
+    }
+
+    return { text: "Do you want a meal plan for weight loss, muscle gain, or maintenance?" };
+  }
 
   return { text: defaultResponses[Math.floor(Math.random() * defaultResponses.length)] };
-};
+}
