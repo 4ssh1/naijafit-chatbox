@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import MessageInput from "./MessageInput";
+import { Message, Gender } from "../lib/types";
 import { getContextualResponse } from "../lib/response";
 import { Gender, Message } from "../lib/types";
 import MessageInput from "./MessageInput";
@@ -20,7 +22,11 @@ function Chat() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
+  useEffect(() => {
   useEffect(() => {
     setMessages([
       {
@@ -136,4 +142,5 @@ function Chat() {
   );
 }
 
+export default Chat;
 export default Chat;
