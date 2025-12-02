@@ -2,10 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import MessageInput from "./MessageInput";
-import { Message, Gender } from "../lib/types";
 import { getContextualResponse } from "../lib/response";
 import { Gender, Message } from "../lib/types";
-import MessageInput from "./MessageInput";
 import { defaultResponses, quickPrompts, welcomeMessage } from "../lib/consts";
 import { WorkOut, Food } from "../lib/types";
 import workouts from "../data/workout.json";
@@ -26,7 +24,6 @@ function Chat() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
   useEffect(() => {
     setMessages([
       {
@@ -142,5 +139,4 @@ function Chat() {
   );
 }
 
-export default Chat;
 export default Chat;
