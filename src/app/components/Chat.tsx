@@ -1,54 +1,27 @@
 "use client";
+
 import { useState, useEffect, useRef } from "react";
 import { getContextualResponse } from "../lib/response";
 import { Gender, Message } from "../lib/types";
 import MessageInput from "./MessageInput";
 import { defaultResponses, quickPrompts, welcomeMessage } from "../lib/consts";
-
+import { WorkOut, Food } from "../lib/types";
+import workouts from "../data/workout.json";
+import foods from "../data/foods.json";
 
 function Chat() {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [gender, setGender] = useState<Gender | undefined>(undefined);
-    const [input, setInput] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [gender, setGender] = useState<Gender | undefined>(undefined);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-    const result = getContextualResponse(input, gender);
-    if (result.gender) {
-      setGender(result.gender); 
-    }
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    const botMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: result.text,
-      timestamp: Date.now(),
-    };
-
-    // setTimeout(() => {
-    //   setMessages((prev) => [...prev, botMessage]);
-    //   setIsLoading(false);
-    //   setInput("");
-    // }, 300);
-
-     
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInput(e.target.value);
-    };
-
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && !isLoading) {
-        handleSend();
-      }
-    };
-
-      useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, [messages]);
-
-
-    useEffect(() => {
+  useEffect(() => {
     setMessages([
       {
         id: crypto.randomUUID(),
@@ -59,25 +32,60 @@ function Chat() {
     ]);
   }, []);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleSend();
+    }
+  };
+
   const handleSend = () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
+    const userMsg: Message = {
       id: crypto.randomUUID(),
       role: "user",
       content: input,
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
-  }
 
+    const result = getContextualResponse(
+      input,
+      gender,
+      (workouts as { workouts: WorkOut[] }).workouts,
+      (foods as { foods: Food[] }).foods,
+      
+    );
+
+    if (result.gender) {
+      setGender(result.gender);
+    }
+
+    const botMsg: Message = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: result.text,
+      timestamp: Date.now(),
+    };
+
+    setTimeout(() => {
+      setMessages((prev) => [...prev, botMsg]);
+      setIsLoading(false);
+    }, 600);
+
+    setInput("");
+  };
 
   return (
     <div className="flex flex-col min-h-[87vh]">
 
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gray-50">
+     <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gray-50">
 
         {messages.length === 1 && (
           <div className="flex gap-2 flex-wrap mb-4">
@@ -128,4 +136,4 @@ function Chat() {
   );
 }
 
-export default Chat
+export default Chat;

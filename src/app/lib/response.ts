@@ -13,7 +13,7 @@ export function getContextualResponse(
   const text = msg.toLowerCase();
   if (!gender && (text.includes("male") || text.includes("man") || text.includes("guy"))) {
     return {
-      text: "Tell me — what's your fitness goal? Weight loss, muscle gain, or general fitness?",
+      text: "Tell me, what's your fitness goal? Weight loss, muscle gain, or general fitness?",
       gender: "male",
     };
   }
@@ -66,7 +66,7 @@ export function getContextualResponse(
       text.includes("advanced") ? "advanced" :
       null;
 
-    const muscles: WorkOut["targetMuscles"][] = [
+    const muscles: WorkOut["targetMuscles"] = [
       "chest","back","shoulders","biceps","triceps","forearms",
       "abs","obliques","lower_back","quads","hamstrings","glutes",
       "calves","core","full_body"
@@ -81,7 +81,7 @@ export function getContextualResponse(
     }
 
     if (targetMuscle) {
-      matched = matched.filter(w => w.targetMuscles === targetMuscle);
+      matched = matched.filter(w => w.targetMuscles.includes(targetMuscle));
     }
 
     if (matched.length > 0) {
@@ -89,9 +89,9 @@ export function getContextualResponse(
       return {
         text:
           `Here's a workout you can try:\n\n**${first.name}**\n` +
-          `**Muscles:** ${first.targetMuscles}\n` +
+          `**Muscles:** ${first.targetMuscles.join(", ")}\n` +
           `**Difficulty:** ${first.difficultyLevel}\n` +
-          `**Equipment:** ${first.equipmentNeeded}\n\n` +
+          `**Equipment:** ${first.equipmentNeeded.join(", ")}\n\n` +
           `**Description:** ${first.description}\n\n` +
           `**Proper Form:** ${first.properForm}\n` +
           `**Common Mistakes:**\n- ${first.commonMistakes.join("\n- ")}\n\n` +

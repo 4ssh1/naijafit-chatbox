@@ -1,0 +1,198 @@
+generator client {
+	provider = "prisma-client-js"
+}
+
+datasource db {
+	provider = "postgresql"
+}
+
+enum Category {
+	strength
+	cardio
+	flexibility
+	mobility
+	hiit
+}
+
+enum TargetGender {
+	male
+	female
+	both
+}
+
+enum DifficultyLevel {
+	beginner
+	intermediate
+	advanced
+}
+
+model Workout {
+	id                 Int                @id @default(autoincrement())
+	name               String
+	category           Category
+	targetGender       TargetGender?
+	difficultyLevel    DifficultyLevel
+	targetMuscles      String[]
+	equipmentNeeded    String[]
+	description        String?
+	properForm         String?
+	commonMistakes     String?
+	setsRecommended    Int?
+	repsRecommended    String?
+	restTimeSeconds    Int?
+	naijaContext       String?
+	createdAt          DateTime           @default(now())
+
+	// relations for alternatives
+	alternativesFrom   ExerciseAlternative[] @relation("original")
+	alternativesTo     ExerciseAlternative[] @relation("alternative")
+
+	@@map("workouts")
+}
+
+model ExerciseAlternative {
+	id                    Int     @id @default(autoincrement())
+	originalExerciseId    Int
+	alternativeExerciseId Int
+	reason                String?
+
+	originalExercise      Workout @relation("original", fields: [originalExerciseId], references: [id], onDelete: Cascade)
+	alternativeExercise   Workout @relation("alternative", fields: [alternativeExerciseId], references: [id], onDelete: Cascade)
+
+	@@map("exercise_alternatives")
+}
+
+model FormGuide {
+  id                    Int       @id @default(autoincrement())
+  exerciseId            Int
+  stanceDescription     String?
+  gripDescription       String?
+  movementPattern       String?
+  breathingTechnique    String?
+  videoUrl              String?
+  imageUrl              String?
+  safetyTips            String[]  
+  commonInjuriesToAvoid String[]  
+  createdAt             DateTime  @default(now())
+
+  @@map("form_guides")
+}
+
+enum FoodCategory {
+  protein
+  carbs
+  vegetables
+  fruits
+  snacks
+  beverages
+  swallow
+}
+
+enum Availability {
+  common
+  seasonal
+  regional
+}
+
+enum MealGoal {
+  weight_loss
+  muscle_gain
+  maintenance
+  endurance
+  strength
+}
+
+enum MealType {
+  breakfast
+  lunch
+  dinner
+  snack
+}
+
+model NigerianFood {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  localName          String?
+  category           FoodCategory
+  caloriesPer100g    Decimal            @db.Decimal(6, 2)
+  proteinG           Decimal            @db.Decimal(5, 2)
+  carbsG             Decimal            @db.Decimal(5, 2)
+  fatsG              Decimal            @db.Decimal(5, 2)
+  fiberG             Decimal            @db.Decimal(5, 2)
+  isBudgetFriendly   Boolean
+  availability       Availability
+  preparationTips    String?
+  createdAt          DateTime           @default(now())
+
+  // Relations for alternatives
+  alternativesFrom   FoodAlternative[]  @relation("original")
+  alternativesTo     FoodAlternative[]  @relation("alternative")
+
+  // Relations to meal plans
+  mealPlanItems      MealPlanItem[]
+
+  @@map("nigerian_foods")
+}
+
+model FoodAlternative {
+  id                 Int                @id @default(autoincrement())
+  originalFoodId     Int
+  alternativeFoodId  Int
+  reason             String?            // 'lower_calorie', 'higher_protein', 'budget', 'healthier'
+  notes              String?
+
+  originalFood       NigerianFood       @relation("original", fields: [originalFoodId], references: [id], onDelete: Cascade)
+  alternativeFood    NigerianFood       @relation("alternative", fields: [alternativeFoodId], references: [id], onDelete: Cascade)
+
+  @@map("food_alternatives")
+}
+
+model MealPlan {
+  id                 Int                @id @default(autoincrement())
+  name               String
+  goal               MealGoal
+  targetGender       TargetGender
+  dailyCalories      Int?
+  totalProteinG      Decimal?           @db.Decimal(6, 2)
+  totalCarbsG        Decimal?           @db.Decimal(6, 2)
+  totalFatsG         Decimal?           @db.Decimal(6, 2)
+  naijaContext       String?
+  createdAt          DateTime           @default(now())
+
+  // Meals in this plan
+  meals              Meal[]
+
+  @@map("meal_plans")
+}
+
+model Meal {
+  id                 Int                @id @default(autoincrement())
+  mealPlanId         Int
+  mealType           MealType
+  totalCalories      Int?
+  totalProteinG      Decimal?           @db.Decimal(6, 2)
+  totalCarbsG        Decimal?           @db.Decimal(6, 2)
+  totalFatsG         Decimal?           @db.Decimal(6, 2)
+
+  // Foods in this meal
+  mealPlanItems      MealPlanItem[]
+  mealPlan           MealPlan           @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+
+  @@map("meals")
+}
+
+model MealPlanItem {
+  id                 Int                @id @default(autoincrement())
+  mealId             Int
+  foodId             Int
+  portion            String             // e.g., "1 cup", "100g", "2 pieces"
+  calories           Int?
+  proteinG           Decimal?           @db.Decimal(5, 2)
+  carbsG             Decimal?           @db.Decimal(5, 2)
+  fatsG              Decimal?           @db.Decimal(5, 2)
+
+  food               NigerianFood       @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  meal               Meal               @relation(fields: [mealId], references: [id], onDelete: Cascade)
+
+  @@map("meal_plan_items")
+}
