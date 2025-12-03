@@ -1,5 +1,7 @@
 generator client {
-	provider = "prisma-client-js"
+	provider = "prisma-client"
+  output   = "../app/generated/prisma"
+
 }
 
 datasource db {
@@ -195,4 +197,72 @@ model MealPlanItem {
   meal               Meal               @relation(fields: [mealId], references: [id], onDelete: Cascade)
 
   @@map("meal_plan_items")
+}
+
+model WorkoutLog {
+  id          Int      @id @default(autoincrement())
+  userId      String   @map("user_id")
+  workoutId   Int      @map("workout_id")
+  workoutName String   @map("workout_name")
+  sets        Int
+  reps        Int
+  weightKg    Float?   @map("weight_kg")
+  notes       String?  @db.Text
+  completedAt DateTime @default(now()) @map("completed_at")
+  
+  user        User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([completedAt])
+  @@map("workout_logs")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  userId        String         @unique @map("user_id")
+  gender        String?
+  fitnessLevel  String?        @map("fitness_level")
+  age           Int?
+  weightKg      Float?         @map("weight_kg")
+  heightCm      Float?         @map("height_cm")
+  goals         String[]       @default([])
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  
+  conversations Conversation[]
+  workoutLogs   WorkoutLog[]
+  
+  @@map("users")
+}
+
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  sessionId String    @unique @map("session_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  
+  user      User      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  messages  Message[]
+  
+  @@index([userId])
+  @@map("conversations")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int          @map("conversation_id")
+  role           MessageRole
+  content        String       @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at")
+  
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  @@index([conversationId])
+  @@map("messages")
 }

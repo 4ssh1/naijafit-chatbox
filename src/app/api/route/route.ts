@@ -1,61 +1,74 @@
-import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
-
-const googleAI = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+import { cookies } from "next/headers";
+import { createChatStream } from "@/app/lib/services/chatService";
+import { HistoryItem } from "@/app/types/chat";
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, history = [] } = await req.json();
+    const { prompt, history = [], userGender, sessionId } = (await req.json()) as {
+      prompt: string;
+      history?: HistoryItem[];
+      userGender?: string;
+      sessionId?: string;
+    };
 
     if (!prompt?.trim()) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
 
-    const messages = history.map((msg: any) => ({
-      role: msg.role,
-      parts: [{ text: msg.content }],
-    }));
+    const cookieStore = await cookies();
+    let userId =  cookieStore.get("userId")?.value;
+    let isNewUserId = false;
 
-    messages.push({
-      role: "user",
-      parts: [{ text: prompt }],
+    if (!userId) {
+      userId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+      isNewUserId = true;
+    }
+
+    const stream = await createChatStream({
+      prompt,
+      history,
+      userGender,
+      sessionId,
+      externalUserId: userId,
     });
 
-    const resultPromise = googleAI.models.generateContentStream({
-      model: "gemini-2.5-flash",
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 4096,
-      },
-      contents: messages,
-    });
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        const encoder = new TextEncoder();
-        const result = await resultPromise;
-        for await (const chunk of result) {
-          const text = chunk.text;
-          if (text) controller.enqueue(encoder.encode(text));
-        }
-        controller.close();
-      },
-    });
-
-    return new Response(stream, {
+    const res = new NextResponse(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
         "Connection": "keep-alive",
+        "X-Content-Type-Options": "nosniff",
       },
     });
+
+    if (isNewUserId) {
+      res.cookies.set("userId", userId, {
+        maxAge: 60 * 60 * 24 * 365,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+      });
+    }
+
+    return res;
   } catch (error: any) {
-    console.error("Gemini error:", error);
+    console.error("Gemini API error:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to generate response" },
+      {
+        error: error.message || "Failed to generate response",
+        details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      },
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    status: "ok",
+    message: "NaijaFit Chat API is running",
+    model: "gemini-2.0-flash-exp",
+  });
 }
