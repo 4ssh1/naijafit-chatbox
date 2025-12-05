@@ -1,6 +1,6 @@
 import { HistoryItem } from "@/types/chat";
-import { User } from "../../../../app/generated/prisma/client";
 import { SYSTEM_PROMPT } from "./systemPrompts";
+import { User } from "@/generated/client";
 
 export function detectGender(message: string): "male" | "female" | null {
   const lower = message.toLowerCase();
