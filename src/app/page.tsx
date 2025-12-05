@@ -1,12 +1,11 @@
-import Chat from "./components/Chat";
-import Header from "./components/Header";
-import Loading from "./loading";
+import Header from "../components/Header";
+import ChatLayout from "../components/Layout";
 
 export default function Home() {
   return (
   <>
    <Header />
-   <Chat />
+   <ChatLayout />
   </>
   );
 }

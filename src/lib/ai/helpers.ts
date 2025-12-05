@@ -1,4 +1,4 @@
-import { HistoryItem } from "@/app/types/chat";
+import { HistoryItem } from "@/types/chat";
 import { User } from "../../../../app/generated/prisma/client";
 import { SYSTEM_PROMPT } from "./systemPrompts";
 

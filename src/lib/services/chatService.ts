@@ -2,7 +2,7 @@ import { buildContextPrompt, buildMessages, detectGender } from "../ai/helpers";
 import { createOrGetUserByExternalId, getUserByExternalId, updateUserGender } from "./userService";
 import { getOrCreateConversation } from "./conversationService";
 import { saveMessage } from "./messageService";
-import { HistoryItem } from "@/app/types/chat";
+import { HistoryItem } from "@/types/chat";
 import { MessageRole } from "./messageService";
 import { googleAI } from "../gemini";
 
